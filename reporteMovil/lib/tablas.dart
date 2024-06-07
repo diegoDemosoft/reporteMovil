@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:reporte_movil/Model/Pa_consulta_movimiento_M.dart';
 import 'package:reporte_movil/loading.dart';
+import 'package:intl/intl.dart';
 
 class TablaScreen extends StatefulWidget {
   @override
@@ -14,7 +15,8 @@ class _TablaScreenState extends State<TablaScreen> {
   bool _cargando = false;
   int pageSize = 10; // Número de registros a mostrar por página
   int pageNumber = 1;
-  String baseUrl = 'http://192.168.1.20:9090/api/';
+  String baseUrl =
+      'http://192.168.1.20:9090/api/'; //cambiar ip y puerto con el que se publico la Api (si se utiliza esta ip la máquina tiene que estar encendida)
 
   @override
   void initState() {
@@ -153,12 +155,12 @@ class _TablaScreenState extends State<TablaScreen> {
                                           Text('${_datos[index].vendedor}')),
                                       DataCell(
                                           Text('${_datos[index].cliente}')),
-                                      DataCell(
-                                          Text('${_datos[index].vtaSinIva}')),
+                                      DataCell(Text(NumberFormat('#,##0.00')
+                                          .format(_datos[index].vtaSinIva))),
                                       DataCell(
                                           Text('${_datos[index].cantidad}')),
-                                      DataCell(
-                                          Text('${_datos[index].vtaConIva}')),
+                                      DataCell(Text(NumberFormat('#,##0.00')
+                                          .format(_datos[index].vtaConIva))),
                                     ];
 
                                     return DataRow(cells: cells);
