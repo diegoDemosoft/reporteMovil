@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               SizedBox(height: 30),
               Text(
-                "Cuentas por Cobrar", // Cambiar nombre de la aplicación
+                "Reporte Movil", // Cambiar nombre de la aplicación
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

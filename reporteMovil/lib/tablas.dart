@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:reporte_movil/Model/Pa_consulta_movimiento_BACKEND02_M.dart';
 import 'package:http/http.dart' as http;
+import 'package:reporte_movil/Model/Pa_consulta_movimiento_M.dart';
+import 'package:reporte_movil/loading.dart';
 
 class TablaScreen extends StatefulWidget {
   @override
@@ -9,36 +10,42 @@ class TablaScreen extends StatefulWidget {
 }
 
 class _TablaScreenState extends State<TablaScreen> {
-  List<Pa_Bsc_Cuenta_Correntista_Movil_M> _datos = [];
-  //Cambiar dirección ip y puerto establecido en la publicación del api
-  String baseUrl = 'http://192.168.1.20:9092/api/';
+  List<Pa_consulta_movimiento_M> _datos = [];
+  bool _cargando = false;
+  int pageSize = 50;
+  String baseUrl = 'http://192.168.1.20:9090/api/';
+
   @override
   void initState() {
     super.initState();
+    _buscarDocumentosPendientes();
   }
 
   Future<void> _buscarDocumentosPendientes() async {
     setState(() {
-      // Establecer isLoading a true al inicio de la carga
+      _cargando = true;
     });
-    String url =
-        '${baseUrl}Pa_Bsc_Cuenta_Correntista_Movil_Ctrl'; // Nombre del controlador
-
-    Uri uri = Uri.parse(url).replace();
+    String url = '${baseUrl}Pa_consulta_movimiento_Ctrl';
+    Map<String, dynamic> queryParams = {
+      "pR_UserName": "DevGD0201",
+      "pageNumber": "1",
+      "pageSize": pageSize.toString(),
+    };
+    Uri uri = Uri.parse(url).replace(queryParameters: queryParams);
 
     try {
-      final response =
-          await http.get(uri, headers: {"Content-Type": "application/json"});
+      final response = await http.get(
+        uri,
+        headers: {"Content-Type": "application/json"},
+      );
 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
 
-        // Verificar si la respuesta es una lista
-        // ignore: unnecessary_type_check
         if (jsonResponse is List) {
           List<dynamic> jsonResponse = json.decode(response.body);
-          List<Pa_Bsc_Cuenta_Correntista_Movil_M> datos = jsonResponse
-              .map((data) => Pa_Bsc_Cuenta_Correntista_Movil_M.fromJson(data))
+          List<Pa_consulta_movimiento_M> datos = jsonResponse
+              .map((data) => Pa_consulta_movimiento_M.fromJson(data))
               .toList();
 
           setState(() {
@@ -53,7 +60,9 @@ class _TablaScreenState extends State<TablaScreen> {
     } catch (error) {
       print('Error: $error');
     } finally {
-      setState(() {});
+      setState(() {
+        _cargando = false;
+      });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {});
       });
@@ -63,54 +72,51 @@ class _TablaScreenState extends State<TablaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Tabla '),
-        ),
-        body: SingleChildScrollView(
-          child: Material(
-            elevation: 5, // Define la elevación del contenedor
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              height: 400, // Define la altura del contenedor
-              width: double.infinity,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: DataTable(
+      appBar: AppBar(
+        title: Text('Tabla '),
+      ),
+      body: _cargando
+          ? Center(child: LoadingComponent()) // Agregar indicador de carga
+          : SingleChildScrollView(
+              child: Material(
+                elevation: 5,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  height: 400,
+                  width: double.infinity,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: DataTable(
                         columns: [
-                          // Cambiar el nombre de las columnas (El mismo numero de columnas tiene que ser el mismo número de celdas)
-                          DataColumn(label: Text('Monto')),
-                          DataColumn(label: Text('Aplicar')),
-                          DataColumn(label: Text('Valor_Aplicado')),
-                          DataColumn(label: Text('Consecutivo_Interno')),
-                          DataColumn(label: Text('R_UserName')),
-                          DataColumn(label: Text('Cuenta_Corriente')),
+                          DataColumn(label: Text('Producto')),
+                          DataColumn(label: Text('Vendedor')),
+                          DataColumn(label: Text('Cliente')),
+                          DataColumn(label: Text('VentaSinIva')),
+                          DataColumn(label: Text('Cantidad')),
+                          DataColumn(label: Text('VentaConIva')),
                         ],
                         rows: _datos.isNotEmpty
-                            // Cambiar el nombre de los campos que se van a mostrar en la tabla, provenientes del model(El mismo numero de celdas tiene que ser el mismo número de columnas)
                             ? List.generate(_datos.length, (index) {
                                 List<DataCell> cells = [
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
-                                  DataCell(
-                                      Text('${_datos[index].ccDireccion}')),
+                                  DataCell(Text('${_datos[index].producto}')),
+                                  DataCell(Text('${_datos[index].vendedor}')),
+                                  DataCell(Text('${_datos[index].cliente}')),
+                                  DataCell(Text('${_datos[index].vtaSinIva}')),
+                                  DataCell(Text('${_datos[index].cantidad}')),
+                                  DataCell(Text('${_datos[index].vtaConIva}')),
                                 ];
 
                                 return DataRow(cells: cells);
                               })
-                            : [])),
+                            : [],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ));
+    );
   }
 }
